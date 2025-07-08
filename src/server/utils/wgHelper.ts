@@ -10,12 +10,19 @@ type Options = {
 };
 
 export const wg = {
-  generateServerPeer: (
-    client: Omit<ClientType, 'createdAt' | 'updatedAt'>,
-    options: Options = {}
-  ) => {
-    const { enableIpv6 = true } = options;
-
+  amneziaParamsToConfig(wgInterface: InterfaceType) {
+      return `Jc = ${wgInterface.awg_jc}
+              Jmin = ${wgInterface.awg_jmin}
+              Jmax = ${wgInterface.awg_jmax}
+              S1 = ${wgInterface.awg_s1}
+              S2 = ${wgInterface.awg_s2}
+              H1 = ${wgInterface.awg_h1}
+              H2 = ${wgInterface.awg_h2}
+              H3 = ${wgInterface.awg_h3}
+              H4 = ${wgInterface.awg_h4}`
+              .split('\n').map(a => a.trim()).join('\n');
+  },
+  generateServerPeer: (client: Omit<ClientType, 'createdAt' | 'updatedAt'>) => {
     const allowedIps = [
       `${client.ipv4Address}/32`,
       ...(enableIpv6 ? [`${client.ipv6Address}/128`] : []),
@@ -62,7 +69,8 @@ MTU = ${wgInterface.mtu}
 PreUp = ${iptablesTemplate(hooks.preUp, wgInterface)}
 PostUp = ${iptablesTemplate(hooks.postUp, wgInterface)}
 PreDown = ${iptablesTemplate(hooks.preDown, wgInterface)}
-PostDown = ${iptablesTemplate(hooks.postDown, wgInterface)}`;
+PostDown = ${iptablesTemplate(hooks.postDown, wgInterface)}
+${wg.amneziaParamsToConfig(wgInterface)}`;
   },
 
   generateClientConfig: (
@@ -92,7 +100,9 @@ PrivateKey = ${client.privateKey}
 Address = ${address}
 DNS = ${(client.dns ?? userConfig.defaultDns).join(', ')}
 MTU = ${client.mtu}
+${wg.amneziaParamsToConfig(wgInterface)}
 ${hookLines.length ? `${hookLines.join('\n')}\n` : ''}
+
 [Peer]
 PublicKey = ${wgInterface.publicKey}
 PresharedKey = ${client.preSharedKey}

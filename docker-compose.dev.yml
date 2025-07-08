@@ -1,5 +1,5 @@
 services:
-  wg-easy:
+  awg-easy:
     build:
       dockerfile: ./Dockerfile.dev
     command: dev
@@ -8,7 +8,7 @@ services:
       - temp:/app/.nuxt/
       - temp1:/app/node_modules/
       - /lib/modules:/lib/modules:ro
-      # - ./data/:/etc/wireguard
+      # - ./data/:/etc/amnezia/amneziawg
     ports:
       - "51820:51820/udp"
       - "51821:51821/tcp"

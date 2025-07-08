@@ -48,7 +48,7 @@ export class InterfaceService {
     });
   }
 
-  update(data: InterfaceUpdateType) {
+  update(data: Partial<InterfaceUpdateType>) {
     return this.#db
       .update(wgInterface)
       .set(data)

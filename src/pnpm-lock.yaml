@@ -108,6 +108,9 @@ importers:
       '@types/debug':
         specifier: ^4.1.12
         version: 4.1.12
+      '@types/node':
+        specifier: ^22.15.14
+        version: 22.15.14
       '@types/phc__format':
         specifier: ^1.0.1
         version: 1.0.1

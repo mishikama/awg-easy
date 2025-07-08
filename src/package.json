@@ -55,6 +55,7 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.5.2",
     "@types/debug": "^4.1.12",
+    "@types/node": "^22.15.14",
     "@types/phc__format": "^1.0.1",
     "@types/semver": "^7.7.0",
     "drizzle-kit": "^0.31.4",

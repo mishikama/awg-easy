@@ -1,3 +1,20 @@
+FROM alpine AS awg-build
+
+RUN apk add git go musl-dev linux-headers gcc make
+
+# Build amneziawg-go
+ADD https://github.com/amnezia-vpn/amneziawg-go.git#2e3f7d122ca8ef61e403fddc48a9db8fccd95dbf /awg-go
+ARG CGO_ENABLED=1
+
+# taken from amneziawg-go/Dockerfile
+RUN cd /awg-go && \
+    go build -ldflags '-linkmode external -extldflags "-fno-PIC -static"' -v -o /awg-go/awg-go.bin
+
+# Build amneziawg-tools
+ADD https://github.com/amnezia-vpn/amneziawg-tools.git#c0b400c6dfc046f5cae8f3051b14cb61686fcf55 /awg-tools
+RUN cd /awg-tools/src && \
+    make -j$(nproc)
+
 FROM docker.io/library/node:lts-alpine AS build
 WORKDIR /app
 
@@ -19,6 +36,16 @@ RUN pnpm build
 FROM docker.io/library/node:lts-alpine
 WORKDIR /app
 
+COPY --from=awg-build /awg-go/awg-go.bin /usr/bin/amneziawg-go
+COPY --from=awg-build /awg-tools/src/wg /usr/bin/awg
+COPY --from=awg-build /awg-tools/src/wg-quick/linux.bash /usr/bin/awg-quick
+
+RUN mkdir -pm 0777 /etc/amnezia/amneziawg
+
+RUN ln -s /usr/bin/awg /usr/bin/wg && \
+    ln -s /usr/bin/awg-quick /usr/bin/wg-quick && \
+    ln -s /etc/amnezia/amneziawg /etc/wireguard
+
 HEALTHCHECK --interval=1m --timeout=5s --retries=3 CMD /usr/bin/timeout 5s /bin/sh -c "/usr/bin/wg show | /bin/grep -q interface || exit 1"
 
 # Copy build
@@ -35,14 +62,14 @@ RUN chmod +x /usr/local/bin/cli
 
 # Install Linux packages
 RUN apk add --no-cache \
+    bash \
     dpkg \
     dumb-init \
     iptables \
     ip6tables \
     nftables \
     kmod \
-    iptables-legacy \
-    wireguard-tools
+    iptables-legacy
 
 # Use iptables-legacy
 RUN update-alternatives --install /usr/sbin/iptables iptables /usr/sbin/iptables-legacy 10 --slave /usr/sbin/iptables-restore iptables-restore /usr/sbin/iptables-legacy-restore --slave /usr/sbin/iptables-save iptables-save /usr/sbin/iptables-legacy-save

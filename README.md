@@ -99,7 +99,6 @@ pnpm dev
 ```
 
 ### Update Auto Imports
-
 If you add something that should be auto-importable and VSCode complains, run:
 
 ```shell

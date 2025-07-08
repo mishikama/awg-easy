@@ -12,6 +12,7 @@ import { UserConfigService } from './repositories/userConfig/service';
 import { InterfaceService } from './repositories/interface/service';
 import { HooksService } from './repositories/hooks/service';
 import { OneTimeLinkService } from './repositories/oneTimeLink/service';
+import * as Numeric from '../utils/num';
 
 const DB_DEBUG = debug('Database');
 
@@ -86,6 +87,27 @@ async function initialSetup(db: DBServiceType) {
       ipv6Cidr: WG_INITIAL_ENV.IPV6_CIDR,
     });
   }
+
+  const awg_jmin = Numeric.rand(64, 1024);
+  const awg_s1 = Numeric.rand(15, 150);
+  let awg_s2 = Numeric.rand(15, 150);
+
+  if (awg_s1 + 56 === awg_s2) {
+    --awg_s2;
+  }
+
+  DB_DEBUG('Setting initial Amnezia parameters...');
+  await db.interfaces.update({
+    awg_jc: Numeric.rand(3, 10),
+    awg_jmin,
+    awg_jmax: Numeric.rand(awg_jmin, 1280),
+    awg_h1: Numeric.rand(5, 2 ** 31 - 1),
+    awg_h2: Numeric.rand(5, 2 ** 31 - 1),
+    awg_h3: Numeric.rand(5, 2 ** 31 - 1),
+    awg_h4: Numeric.rand(5, 2 ** 31 - 1),
+    awg_s1,
+    awg_s2
+  });
 
   if (WG_INITIAL_ENV.DNS) {
     DB_DEBUG('Setting initial DNS...');
